@@ -1,0 +1,4 @@
+client_id: ***************************
+client_secret: ***************************
+token_store: /Users/<username>/.config/pinatra/token_store.yml
+default_user: ***************************

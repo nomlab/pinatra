@@ -1,0 +1,6 @@
+* Pinatra
+** setting
++ Prepare config.yml
+  $ cp config.yml.sample /Users/<username>/.config/pinatra/config.yml
++ Modify CONFIG_PATH in picasa_client.rb
++ Run tokengetter.rb for google oauth
