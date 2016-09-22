@@ -18,7 +18,7 @@ get "/:album/photos" do
   contents = []
   album_id = album_name_to_id(picasa_client, params[:album])
   return "Not found" unless album_id
-  album = picasa_client.album.show(album_id)
+  album = picasa_client.album.show(album_id, {thumbsize: "128c"})
   album.photos.each do |p|
     contents << "---------------------------"
     contents << "Title: #{p.title}"
