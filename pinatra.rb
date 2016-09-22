@@ -1,5 +1,6 @@
 require 'sinatra'
 require './picasa_client'
+require 'json'
 
 def album_name_to_id(client, album_name)
   album = client.album.list.entries.find do |a|
@@ -20,10 +21,17 @@ get "/:album/photos" do
   return "Not found" unless album_id
   album = picasa_client.album.show(album_id, {thumbsize: "128c"})
   album.photos.each do |p|
-    contents << "---------------------------"
-    contents << "Title: #{p.title}"
-    contents << "<img src=\"#{p.media.thumbnails.last.url}.\">"
-    contents << "---------------------------"
+    thumb = p.media.thumbnails.first
+    photo = {
+      src: p.content.src,
+      title: p.title,
+      thumb: {
+        url: thumb.url,
+        width: 80,
+        height: 80
+      }
+    }
+    contents << photo
   end
-  contents.join("<br>")
+  "pinatra_photo_list(" + contents.to_json + ");"
 end
