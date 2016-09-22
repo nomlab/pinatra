@@ -12,8 +12,8 @@ Google::Apis::RequestOptions.default.retries = 5
 module Pinatra
   # See: https://developers.google.com/google-apps/calendar/v3/reference/?hl=ja
 
-  # CONFIG_PATH = "/Users/<username>/.config/pinatra/config.yml"
-  CONFIG_PATH = "./config.yml"
+  CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
+
   class PicasaClient
     # see
     # https://github.com/google/google-api-ruby-client#example-usage
