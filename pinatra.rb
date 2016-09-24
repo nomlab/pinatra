@@ -27,8 +27,8 @@ get "/:album/photos" do
       title: p.title,
       thumb: {
         url: thumb.url,
-        width: 80,
-        height: 80
+        width: 128,
+        height: 128
       }
     }
     contents << photo
