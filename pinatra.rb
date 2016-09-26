@@ -57,3 +57,12 @@ get "/:album/photos" do
 
   return content
 end
+
+post "/:album/photo/new" do
+  album = find_album_by_name(picasa_client, params[:album])
+  return "Not found" unless album
+
+  photo = picasa_client.photo.create(album.id, binary: request.body.read, content_type: "image/jpeg", title: "No title")
+
+  return photo.id
+end
