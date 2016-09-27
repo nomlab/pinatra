@@ -11,6 +11,20 @@ def pinatra_cache_file_name(album)
   "pinatra.#{album.id}.#{album.etag}.cache"
 end
 
+def extension_to_content_type(key)
+  type = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    jpe: "image/jpeg",
+    JPG: "image/jpeg",
+    JPEG: "image/jpeg",
+    JPE: "image/jpeg",
+    png: "image/png",
+    PNG: "image/png"
+  }
+  return type[key]
+end
+
 picasa_client = Pinatra::PicasaClient.new.client
 
 get "/hello" do
@@ -78,8 +92,9 @@ post "/:album/photo/new" do
   files_key = params.keys.select {|key| key =~ /file\d+/}
   files_key.each do |key|
     param = params[key]
-    # FIXME: decision by filename extension.
-    photo = picasa_client.photo.create(album.id, binary: param[:tempfile].read, content_type: "image/jpeg", title: (params['title'] || param[:filename]))
+    file_type = param[:filename].split(/./).last
+
+    photo = picasa_client.photo.create(album.id, binary: param[:tempfile].read, content_type: (extension_to_content_type(file_type) || "image/jpeg"), title: (params['title'] || param[:filename]))
     thumb = photo.media.thumbnails.first
     hash = {
       src: photo.content.src,
