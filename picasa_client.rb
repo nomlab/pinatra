@@ -19,8 +19,8 @@ module Pinatra
     # https://github.com/google/google-api-ruby-client#example-usage
     # http://stackoverflow.com/questions/12572723/rails-google-client-api-unable-to-exchange-a-refresh-token-for-access-token
 
-    attr_reader :client
     OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'
+    attr_reader :client
 
     def initialize(shell = nil)
       config = YAML.load_file(CONFIG_PATH)
@@ -57,8 +57,29 @@ module Pinatra
       end
       credentials.refresh! if credentials.refresh_token && credentials.expired?
 
-      @client = Picasa::Client.new(user_id: user_id, access_token: credentials.access_token)
+      @client = Pinatra::Client.new(user_id: user_id, credentials: credentials)
       return @client
     end
   end # class Calendar
+
+  class Client
+    def initialize(options = {})
+      @user_id = options[:user_id]
+      @credentials = options[:credentials]
+      @client = Picasa::Client.new(user_id: @user_id, access_token: @credentials.access_token)
+    end
+
+    def api(api_class, api_method, args, options = {})
+      if @client.respond_to?(api_class) &&
+         @client.send(api_class).respond_to?(api_method)
+        begin
+          return @client.send(api_class).send(api_method, *args, options)
+        rescue Picasa::ForbiddenError
+          @credentials.refresh!
+          @client = Picasa::Client.new(user_id: @user_id, access_token: @credentials.access_token)
+          retry
+        end
+      end
+    end
+  end
 end # module Glima

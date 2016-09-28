@@ -1,10 +1,10 @@
 require 'sinatra'
 require './picasa_client'
 require 'json'
-require 'pp'
 
+# FIXME: refactor client.api interface
 def find_album_by_name(client, album_name)
-  client.album.list.entries.find {|a| a.title == album_name}
+  client.api(:album, :list, nil).entries.find {|a| a.title == album_name}
 end
 
 def pinatra_cache_file_name(album)
@@ -41,7 +41,7 @@ get "/:album/photos" do
   if File.exists?(cache_file)
     json = File.open(cache_file).read
   else
-    photos = picasa_client.album.show(album.id, {thumbsize: "128c"}).photos
+    photos = picasa_client.api(:album, :show, album.id, {thumbsize: "128c"}).photos
     photos.each do |p|
       thumb = p.media.thumbnails.first
       photo = {
@@ -93,7 +93,7 @@ post "/:album/photo/new" do
     param = params[key]
     file_type = param[:filename].split(/./).last
 
-    photo = picasa_client.photo.create(album.id, binary: param[:tempfile].read, content_type: (extension_to_content_type(file_type) || "image/jpeg"), title: (title || param[:filename]))
+    photo = picasa_client(:photo, :create, album.id, binary: param[:tempfile].read, content_type: (extension_to_content_type(file_type) || "image/jpeg"), title: (title || param[:filename]))
     thumb = photo.media.thumbnails.first
     hash = {
       src: photo.content.src,
