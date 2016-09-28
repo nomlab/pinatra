@@ -82,19 +82,18 @@ end
 # Default photo name is uploaded file name.
 # If specify, set parameter such as following.
 # /nomnichi/photo/new?title=photoname
-# FIXME?: if several files are uploaded and title parameter is set,
-#        all uploaded photos titles are same.
 post "/:album/photo/new" do
   album = find_album_by_name(picasa_client, params[:album])
   return "Not found" unless album
 
   contents = []
+  title = params['title']
   files_key = params.keys.select {|key| key =~ /file\d+/}
   files_key.each do |key|
     param = params[key]
     file_type = param[:filename].split(/./).last
 
-    photo = picasa_client.photo.create(album.id, binary: param[:tempfile].read, content_type: (extension_to_content_type(file_type) || "image/jpeg"), title: (params['title'] || param[:filename]))
+    photo = picasa_client.photo.create(album.id, binary: param[:tempfile].read, content_type: (extension_to_content_type(file_type) || "image/jpeg"), title: (title || param[:filename]))
     thumb = photo.media.thumbnails.first
     hash = {
       src: photo.content.src,
@@ -107,6 +106,7 @@ post "/:album/photo/new" do
       }
     }
     contents << hash
+    title = nil unless title == nil
   end
 
   json = contents.to_json
