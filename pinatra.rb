@@ -21,7 +21,6 @@ def extension_to_content_type(key)
   return type[key]
 end
 
-picasa_client = Pinatra::PicasaClient.new.client
 ################################################################
 ## Pinatra Photo cache
 module Pinatra
@@ -56,6 +55,10 @@ end
 helpers do
   def cache
     @cache ||= Pinatra::PhotoCache.new
+  end
+
+  def picasa_client
+    @picasa_client ||= Pinatra::PicasaClient.new.client
   end
 end
 
