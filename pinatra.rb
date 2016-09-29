@@ -7,10 +7,6 @@ def find_album_by_name(client, album_name)
   client.api(:album, :list, nil).entries.find {|a| a.title == album_name}
 end
 
-def pinatra_cache_file_name(album)
-  "pinatra.#{album.id}.#{album.etag}.cache"
-end
-
 def extension_to_content_type(key)
   type = {
     jpg: "image/jpeg",
@@ -26,6 +22,42 @@ def extension_to_content_type(key)
 end
 
 picasa_client = Pinatra::PicasaClient.new.client
+################################################################
+## Pinatra Photo cache
+module Pinatra
+  class PhotoCache
+    def get(album)
+      cache_file = album_cache_file_name(album)
+
+      return File.open(cache_file).read if File.exists?(cache_file)
+      return nil # not found
+    end
+
+    def save(album, json)
+      cache_file = album_cache_file_name(album)
+
+      File.open(cache_file, "w") do |file|
+        file.print json
+      end
+      return self
+    end
+
+    private
+
+    def album_cache_file_name(album)
+      "pinatra.#{album.id}.#{album.etag}.cache"
+    end
+  end # class PhotoCache
+end
+
+################################################################
+# helpers
+
+helpers do
+  def cache
+    @cache ||= Pinatra::PhotoCache.new
+  end
+end
 
 get "/hello" do
   "Suzuki Shinra!!"
@@ -37,10 +69,7 @@ get "/:album/photos" do
   album = find_album_by_name(picasa_client, params[:album])
   return "Not found" unless album
 
-  cache_file = pinatra_cache_file_name(album)
-  if File.exists?(cache_file)
-    json = File.open(cache_file).read
-  else
+  unless json = cache.get(album)
     photos = picasa_client.api(:album, :show, album.id, {thumbsize: "128c"}).photos
     photos.each do |p|
       thumb = p.media.thumbnails.first
@@ -67,10 +96,7 @@ get "/:album/photos" do
     content = json
   end
 
-  File.open(cache_file, "w") do |file|
-    file.print json
-  end
-
+  cache.save(album, json)
   return content
 end
 
