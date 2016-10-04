@@ -1,6 +1,7 @@
 require 'sinatra'
 require './picasa_client'
 require 'json'
+require 'digest/sha1'
 
 # FIXME: refactor client.api interface
 def find_album_by_id(client, album_id)
@@ -44,8 +45,8 @@ module Pinatra
     private
 
     def album_cache_file_name(album)
-      etag = album.etag =~ /^W\/(.+)$/ ? $1 : album.etag
-      "pinatra.#{album.id}.#{etag}.cache"
+      sha1 = Digest::SHA1.hexdigest("#{album.id}" + album.etag)
+      "pinatra.#{sha1}.cache"
     end
   end # class PhotoCache
 end
