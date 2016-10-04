@@ -124,7 +124,7 @@ post "/:album_id/photo/new" do
     param = params[key]
     file_type = param[:filename].split(/./).last
 
-    photo = picasa_client(:photo, :create, album.id, binary: param[:tempfile].read, content_type: (extension_to_content_type(file_type) || "image/jpeg"), title: (title || param[:filename]))
+    photo = picasa_client.api(:photo, :create, album.id, binary: param[:tempfile].read, content_type: (extension_to_content_type(file_type) || "image/jpeg"), title: (title || param[:filename]))
     thumb = photo.media.thumbnails.first
     hash = {
       src: photo.content.src,
