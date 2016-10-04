@@ -3,8 +3,8 @@ require './picasa_client'
 require 'json'
 
 # FIXME: refactor client.api interface
-def find_album_by_name(client, album_name)
-  client.api(:album, :list, nil).entries.find {|a| a.title == album_name}
+def find_album_by_id(client, album_id)
+  client.api(:album, :show, album_id)
 end
 
 def extension_to_content_type(key)
@@ -44,7 +44,8 @@ module Pinatra
     private
 
     def album_cache_file_name(album)
-      "pinatra.#{album.id}.#{album.etag}.cache"
+      etag = album.etag =~ /^W\/(.+)$/ ? $1 : album.etag
+      "pinatra.#{album.id}.#{etag}.cache"
     end
   end # class PhotoCache
 end
@@ -66,10 +67,10 @@ get "/hello" do
   "Suzuki Shinra!!"
 end
 
-get "/:album/photos" do
+get "/:album_id/photos" do
   contents = []
   callback = params['callback']
-  album = find_album_by_name(picasa_client, params[:album])
+  album = find_album_by_id(picasa_client, params[:album_id])
   return "Not found" unless album
 
   unless json = cache.get(album)
@@ -111,8 +112,8 @@ end
 # Default photo name is uploaded file name.
 # If specify, set parameter such as following.
 # /nomnichi/photo/new?title=photoname
-post "/:album/photo/new" do
-  album = find_album_by_name(picasa_client, params[:album])
+post "/:album_id/photo/new" do
+  album = find_album_by_id(picasa_client, params[:album_id])
   return "Not found" unless album
 
   contents = []
