@@ -5,7 +5,7 @@ class TokenGetter < Thor
   desc "token", "Get picasa web api token"
 
   def token
-    Pinatra::PicasaClient.new(self)
+    Pinatra::GooglePhotoClient.new(self)
   end
 end
 

@@ -1,5 +1,5 @@
+# coding: utf-8
 require 'sinatra'
-require './picasa_client'
 require 'json'
 require 'digest/sha1'
 
@@ -44,8 +44,8 @@ module Pinatra
 
     private
 
-    def album_cache_file_name(album)
-      sha1 = Digest::SHA1.hexdigest("#{album.id}" + album.etag)
+    def album_cache_file_name(album_id)
+      sha1 = Digest::SHA1.hexdigest(album_id)
       "pinatra.#{sha1}.cache"
     end
   end # class PhotoCache
@@ -59,8 +59,8 @@ helpers do
     @cache ||= Pinatra::PhotoCache.new
   end
 
-  def picasa_client
-    @picasa_client ||= Pinatra::PicasaClient.new.client
+  def google_photo_client
+    @google_photo_client ||= Pinatra::GooglePhotoClient.new.client
   end
 end
 
@@ -71,27 +71,23 @@ end
 get "/:album_id/photos" do
   contents = []
   callback = params['callback']
-  album = find_album_by_id(picasa_client, params[:album_id])
-  return "Not found" unless album
-
-  unless json = cache.get(album)
-    photos = picasa_client.api(:album, :show, album.id, {thumbsize: "128c"}).photos
-    photos.each do |p|
-      thumb = p.media.thumbnails.first
-      photo = {
-        src: p.content.src,
-        title: p.title,
-        id: p.id,
-        thumb: {
-          url: thumb.url,
-          width: 128,
-          height: 128
-        }
+  album_id = params[:album_id]
+  
+  photos = google_photo_client.get_albumphotos(album_id)
+  photos.each do |p|
+    photo = {
+      src: p["baseUrl"],
+      title: p["filename"],
+      id: p["id"],
+      thumb: {
+        url: p["baseUrl"],
+        width: 128,
+        height: 128
       }
-      contents << photo
-    end
-    json = contents.to_json
+    }
+    contents << photo
   end
+  json = contents.to_json
 
   if callback
     content_type :js
@@ -101,7 +97,8 @@ get "/:album_id/photos" do
     content = json
   end
 
-  cache.save(album, json)
+  # FIXME: アルバムに更新がなければ保存したキャッシュを使うほうがよい．
+  #cache.save(album_id, json)
   return content
 end
 
@@ -114,7 +111,7 @@ end
 # If specify, set parameter such as following.
 # /nomnichi/photo/new?title=photoname
 post "/:album_id/photo/new" do
-  album = find_album_by_id(picasa_client, params[:album_id])
+  album = find_album_by_id(google_photo_client, params[:album_id])
   return "Not found" unless album
 
   contents = []
@@ -124,7 +121,7 @@ post "/:album_id/photo/new" do
     param = params[key]
     file_type = param[:filename].split(/./).last
 
-    photo = picasa_client.api(:photo, :create, album.id, binary: param[:tempfile].read, content_type: (extension_to_content_type(file_type) || "image/jpeg"), title: (title || param[:filename]))
+    photo = google_photo_client.api(:photo, :create, album.id, binary: param[:tempfile].read, content_type: (extension_to_content_type(file_type) || "image/jpeg"), title: (title || param[:filename]))
     thumb = photo.media.thumbnails.first
     hash = {
       src: photo.content.src,

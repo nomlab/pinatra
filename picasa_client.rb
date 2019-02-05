@@ -1,9 +1,12 @@
+# coding: utf-8
 require 'google/apis/gmail_v1'
 require 'googleauth'
 require 'googleauth/stores/file_token_store'
-require 'picasa'
 require 'launchy'
 require 'yaml'
+require 'json'
+require 'net/https'
+require 'uri'
 require 'pp'
 
 # Retry if rate-limit.
@@ -14,7 +17,7 @@ module Pinatra
 
   CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
 
-  class PicasaClient
+  class GooglePhotoClient
     # see
     # https://github.com/google/google-api-ruby-client#example-usage
     # http://stackoverflow.com/questions/12572723/rails-google-client-api-unable-to-exchange-a-refresh-token-for-access-token
@@ -26,8 +29,7 @@ module Pinatra
       config = YAML.load_file(CONFIG_PATH)
 
       user_id = config["default_user"]
-      # scope = Google::Apis::GmailV1::AUTH_GMAIL_LABELS
-      scope = "https://picasaweb.google.com/data/"
+      scope = "https://www.googleapis.com/auth/photoslibrary"
 
       client_id = Google::Auth::ClientId.new(
         config["client_id"],
@@ -60,26 +62,36 @@ module Pinatra
       @client = Pinatra::Client.new(user_id: user_id, credentials: credentials)
       return @client
     end
-  end # class Calendar
+  end # class GooglePhotoClient
 
   class Client
     def initialize(options = {})
       @user_id = options[:user_id]
       @credentials = options[:credentials]
-      @client = Picasa::Client.new(user_id: @user_id, access_token: @credentials.access_token)
     end
 
-    def api(api_class, api_method, args, options = {})
-      if @client.respond_to?(api_class) &&
-         @client.send(api_class).respond_to?(api_method)
-        begin
-          return @client.send(api_class).send(api_method, *args, options)
-        rescue Picasa::ForbiddenError
-          @credentials.refresh!
-          @client = Picasa::Client.new(user_id: @user_id, access_token: @credentials.access_token)
-          retry
+    # album_id で指定されたアルバムから最新の page_size 枚を取得
+    def get_albumphotos(album_id, page_size = 100)
+      url = "https://photoslibrary.googleapis.com/v1/mediaItems:search"
+      uri = URI.parse(url)
+      header =  { "Authorization" => "Bearer #{@credentials.access_token}", "Content-Type" => "application/json" }
+      request = { "albumId": album_id, "pageSize": page_size }
+
+      begin
+        res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          http.post(uri.request_uri, request.to_json, header)
         end
+        if res.class == Net::HTTPOK
+          return JSON.parse(res.body)
+        else
+          raise "HTTPRequestFailed"
+        end
+      rescue
+        @credentials.refresh!
+        header["Authorization"] = "Bearer #{@credentials.access_token}"
+        retry
       end
     end
   end
-end # module Glima
+end # module Pinatra
