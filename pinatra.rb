@@ -1,5 +1,6 @@
 # coding: utf-8
 require 'sinatra'
+require './googlephoto_client'
 require 'json'
 require 'digest/sha1'
 
