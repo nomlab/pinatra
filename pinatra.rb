@@ -74,7 +74,7 @@ get "/:album_id/photos" do
   callback = params['callback']
   album_id = params[:album_id]
   
-  photos = google_photo_client.get_albumphotos(album_id)
+  photos = google_photo_client.get_albumphotos(album_id).to_h["mediaItems"]
   photos.each do |p|
     photo = {
       src: p["baseUrl"],
