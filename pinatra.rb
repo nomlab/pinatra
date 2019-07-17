@@ -3,6 +3,8 @@ require 'sinatra'
 require './googlephoto_client'
 require 'json'
 require 'digest/sha1'
+# Add
+require 'open-uri'
 
 # FIXME: refactor client.api interface
 def find_album_by_id(client, album_id)
@@ -73,11 +75,25 @@ get "/:album_id/photos" do
   contents = []
   callback = params['callback']
   album_id = params[:album_id]
-  
+
   photos = google_photo_client.get_albumphotos(album_id).to_h["mediaItems"]
+
+# アルバムを取得後，各写真を保存する
+# public/photo以下に<photo_id>.jpgとして保存
+  photos.each do |p|
+    unless File.exist?("public/photo/#{p["id"]}.jpg")
+      open(p["baseUrl"]) do |file|
+        filename = "#{p["id"]}.jpg"
+        open("public/photo/#{filename}", "w+b") do |out|
+          out.write(file.read)
+        end
+      end
+    end
+  end
+
   photos.each do |p|
     photo = {
-      src: p["baseUrl"],
+      src: "http://localhost:4567/photo/#{p["id"]}.jpg",
       title: p["filename"],
       id: p["id"],
       thumb: {
@@ -97,6 +113,8 @@ get "/:album_id/photos" do
     content_type :json
     content = json
   end
+
+ 
 
   # FIXME: アルバムに更新がなければ保存したキャッシュを使うほうがよい．
   #cache.save(album_id, json)
