@@ -81,7 +81,8 @@ get "/:album_id/photos" do
       title: p["filename"],
       id: p["id"],
       thumb: {
-        url: p["baseUrl"],
+        #url: p["baseUrl"],
+        url: "http://seiryu.swlab.cs.okayama-u.ac.jp/#{p["id"]}",
         width: 128,
         height: 128
       }
@@ -101,6 +102,10 @@ get "/:album_id/photos" do
   # FIXME: アルバムに更新がなければ保存したキャッシュを使うほうがよい．
   #cache.save(album_id, json)
   return content
+end
+
+get "/photo/:mediaitem_id" do
+  return google_photo_client.get_photo(mediaitem_id).to_h["baseUrl"]
 end
 
 # Upload contents of files as image.
