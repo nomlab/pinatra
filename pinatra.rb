@@ -5,6 +5,7 @@ require 'json'
 require 'digest/sha1'
 # Add
 require 'open-uri'
+require 'yaml'
 
 # FIXME: refactor client.api interface
 def find_album_by_id(client, album_id)
@@ -72,6 +73,9 @@ get "/hello" do
 end
 
 get "/:album_id/photos" do
+  CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
+  config = YAML.load_file(CONFIG_PATH)
+
   contents = []
   callback = params['callback']
   album_id = params[:album_id]
@@ -93,7 +97,7 @@ get "/:album_id/photos" do
 
   photos.each do |p|
     photo = {
-      src: "http://localhost:4567/photo/#{p["id"]}.jpg",
+      src: "#{config["host_url"]}/photo/#{p["id"]}.jpg",
       title: p["filename"],
       id: p["id"],
       thumb: {
