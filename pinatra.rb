@@ -86,7 +86,7 @@ get "/:album_id/photos" do
 # public/photo以下に<photo_id>.jpgとして保存
   photos.each do |p|
     unless File.exist?("public/photo/#{p["id"]}.jpg")
-      open("#{p[`baseUrl`]=w1024-h1024}") do |file|
+      open("#{p['baseUrl']}=w1024-h1024") do |file|
         filename = "#{p["id"]}.jpg"
         open("public/photo/#{filename}", "w+b") do |out|
           out.write(file.read)
