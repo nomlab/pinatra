@@ -1,0 +1,12 @@
+[Unit]
+Description = pinatra daemon
+
+[Service]
+WorkingDirectory=/home/nomlab/pinatra
+ExecStart=/bin/sh -c 'exec /home/nomlab/pinatra/start.sh >> /home/nomlab/pinatra/pinatra.log 2>&1'
+Type=simple
+Restart=on-failure
+EnvironmentFile=/home/nomlab/.config/systemd/user/pinatra_env
+
+[Install]
+WantedBy=default.target
