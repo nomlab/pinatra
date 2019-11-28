@@ -116,7 +116,7 @@ get "/:album_id/photos" do
 
   photos.each do |p|
     photo = {
-      src: "#{config["host_url"]}/photo/#{p["id"].jpg}",
+      src: "#{config["host_url"]}/photo/#{p["id"]}.jpg",
       title: p["filename"],
       id: p["id"],
       thumb: {
