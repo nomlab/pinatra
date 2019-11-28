@@ -72,7 +72,7 @@ get "/hello" do
   "Suzuki Shinra!!"
 end
 
-get /\/photo\/(.*).jpg/ do
+get /\/photo\/(.*)\.jpg$/ do
   CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
   config = YAML.load_file(CONFIG_PATH)
 
