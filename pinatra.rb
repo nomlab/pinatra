@@ -72,14 +72,13 @@ get "/hello" do
   "Suzuki Shinra!!"
 end
 
-get "/photo/:photo_id" do
+get /\/photo\/(.*).jpg/ do
   CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
   config = YAML.load_file(CONFIG_PATH)
 
-  params[:photo_id].gsub!(/\.jpg$/, "")
-  photo_url = "photo/#{params[:photo_id]}.jpg"
+  photo_url = "photo/#{params['captures'].first}.jpg"
   if !File.exist?(photo_url)
-    photo = google_photo_client.get_photo(params[:photo_id]).to_h
+    photo = google_photo_client.get_photo(params['captures'].first).to_h
     open("#{photo['baseUrl']}=w1024-h1024") do |file|
       open(photo_url, "w+b") do |output|
         output.write(file.read)
@@ -117,7 +116,7 @@ get "/:album_id/photos" do
 
   photos.each do |p|
     photo = {
-      src: "#{config["host_url"]}/photo/#{p["id"]}",
+      src: "#{config["host_url"]}/photo/#{p["id"].jpg}",
       title: p["filename"],
       id: p["id"],
       thumb: {
