@@ -72,6 +72,27 @@ get "/hello" do
   "Suzuki Shinra!!"
 end
 
+# 注意: sinatraが用いている正規表現ライブラリでは，終端表現が使えない
+# https://github.com/sinatra/mustermann
+get /\/photo\/(.*)\.jpg/ do
+  CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
+  config = YAML.load_file(CONFIG_PATH)
+
+  photo_url = "photo/#{params['captures'].first}.jpg"
+  if !File.exist?(photo_url)
+    photo = google_photo_client.get_photo(params['captures'].first).to_h
+    open("#{photo['baseUrl']}=w1024-h1024") do |file|
+      open(photo_url, "w+b") do |output|
+        output.write(file.read)
+      end
+    end
+  end
+
+  open(photo_url, "r") do |file|
+    file.read
+  end
+end
+
 get "/:album_id/photos" do
   CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
   config = YAML.load_file(CONFIG_PATH)
@@ -82,18 +103,18 @@ get "/:album_id/photos" do
 
   photos = google_photo_client.get_albumphotos(album_id).to_h["mediaItems"]
 
-# アルバムを取得後，各写真を保存する
-# public/photo以下に<photo_id>.jpgとして保存
-  photos.each do |p|
-    unless File.exist?("public/photo/#{p["id"]}.jpg")
-      open("#{p['baseUrl']}=w1024-h1024") do |file|
-        filename = "#{p["id"]}.jpg"
-        open("public/photo/#{filename}", "w+b") do |out|
-          out.write(file.read)
-        end
-      end
-    end
-  end
+  # アルバムを取得後，各写真を保存する
+  # public/photo以下に<photo_id>.jpgとして保存
+  # photos.each do |p|
+  #   unless File.exist?("public/photo/#{p["id"]}.jpg")
+  #     open("#{p['baseUrl']}=w1024-h1024") do |file|
+  #       filename = "#{p["id"]}.jpg"
+  #       open("public/photo/#{filename}", "w+b") do |out|
+  #         out.write(file.read)
+  #       end
+  #     end
+  #   end
+  # end
 
   photos.each do |p|
     photo = {

@@ -93,5 +93,27 @@ module Pinatra
         retry
       end
     end
+
+# mediaItemsID で指定された画像を get
+    def get_photo(mediaitem_id)
+      url = "https://photoslibrary.googleapis.com/v1/mediaItems/#{mediaitem_id}"
+      uri = URI.parse(url)
+      header =  { "Authorization" => "Bearer #{@credentials.access_token}", "Content-Type" => "application/json" }
+      begin
+        res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          http.get(uri.request_uri, header)
+        end
+        if res.class == Net::HTTPOK
+          return JSON.parse(res.body)
+        else
+          raise "HTTPRequestFailed"
+        end
+      rescue
+        @credentials.refresh!
+        header["Authorization"] = "Bearer #{@credentials.access_token}"
+        retry
+      end
+    end
   end
 end # module Pinatra
