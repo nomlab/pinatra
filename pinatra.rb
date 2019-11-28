@@ -76,6 +76,7 @@ get "/photo/:photo_id" do
   CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
   config = YAML.load_file(CONFIG_PATH)
 
+  params[:photo_id].gsub!(/\.jpg$/, "")
   photo_url = "photo/#{params[:photo_id]}.jpg"
   if !File.exist?(photo_url)
     photo = google_photo_client.get_photo(params[:photo_id]).to_h
