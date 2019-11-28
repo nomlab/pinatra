@@ -1,12 +1,15 @@
 [Unit]
-Description = pinatra daemon
+Description = Photo Management Service pinatra
+# Show more detail in https://github.com/nomlab/pinatra
 
 [Service]
+# Please change WorkingDirectory and EnviromentFile paths to suit your environment.
 WorkingDirectory=/home/nomlab/pinatra
-ExecStart=/bin/sh -c 'exec /home/nomlab/pinatra/start.sh >> /home/nomlab/pinatra/pinatra.log 2>&1'
+EnvironmentFile=/home/nomlab/.config/systemd/user/pinatra_env
+
+ExecStart=/bin/sh -c 'exec ./start.sh >> ./pinatra.log 2>&1'
 Type=simple
 Restart=on-failure
-EnvironmentFile=/home/nomlab/.config/systemd/user/pinatra_env
 
 [Install]
 WantedBy=default.target
