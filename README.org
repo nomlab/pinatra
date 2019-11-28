@@ -4,3 +4,10 @@
   $ cp config.yml.sample /Users/<username>/.config/pinatra/config.yml
 + Modify CONFIG_PATH in picasa_client.rb
 + Run tokengetter.rb for google oauth
+
+** systemd settings
+#+BEGIN_SRC
+$ cp systemd_conf/user/* $HOME/.config/systemd/user/
+$ systemctl --user enable pinatra.service
+$ systemctl --user start pinatra.service
+#+END_SRC
