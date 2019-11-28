@@ -107,7 +107,7 @@ module Pinatra
         if res.class == Net::HTTPOK
           return JSON.parse(res.body)
         else
-          raise "HTTPRequestFailed"
+          return nil
         end
       rescue
         @credentials.refresh!

@@ -72,6 +72,10 @@ get "/hello" do
   "Suzuki Shinra!!"
 end
 
+not_found do
+  "Not Found"
+end
+
 # 注意: sinatraが用いている正規表現ライブラリでは，終端表現が使えない
 # https://github.com/sinatra/mustermann
 get /\/photo\/(.*)\.jpg/ do
@@ -80,7 +84,14 @@ get /\/photo\/(.*)\.jpg/ do
 
   photo_url = "photo/#{params['captures'].first}.jpg"
   if !File.exist?(photo_url)
-    photo = google_photo_client.get_photo(params['captures'].first).to_h
+    photo = google_photo_client.get_photo(params['captures'].first)
+    if photo
+      photo = photo.to_h
+    else
+      # Sinatra::NotFound例外が発生するとnot_found doにとぶ
+      raise Sinatra::NotFound
+    end
+
     open("#{photo['baseUrl']}=w1024-h1024") do |file|
       open(photo_url, "w+b") do |output|
         output.write(file.read)
