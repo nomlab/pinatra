@@ -72,7 +72,9 @@ get "/hello" do
   "Suzuki Shinra!!"
 end
 
-get /\/photo\/(.*)\.jpg$/ do
+# 注意: sinatraが用いている正規表現ライブラリでは，終端表現が使えない
+# https://github.com/sinatra/mustermann
+get /\/photo\/(.*)\.jpg/ do
   CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
   config = YAML.load_file(CONFIG_PATH)
 
