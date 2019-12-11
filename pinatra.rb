@@ -104,15 +104,20 @@ get /\/photo\/(.*)\.jpg/ do
   end
 end
 
-get "/:album_id/photos" do
+get "/photos" do
   CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
   config = YAML.load_file(CONFIG_PATH)
 
+  photos = []
   contents = []
   callback = params['callback']
-  album_id = params[:album_id]
+  album_id_list = config["album_id"]
 
-  photos = google_photo_client.get_albumphotos(album_id).to_h["mediaItems"]
+  album_id_list.each do |album_id|
+    photos = Array(photos) << google_photo_client.get_albumphotos(album_id).to_h["mediaItems"]
+  end
+  photos.flatten!
+  photos.compact!
 
   # アルバムを取得後，各写真を保存する
   # public/photo以下に<photo_id>.jpgとして保存
@@ -191,7 +196,7 @@ post "/:album_id/photo/new" do
     contents << hash
     title = nil unless title == nil
   end
-
+  
   json = contents.to_json
   content_type :json
 
