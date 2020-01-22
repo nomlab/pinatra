@@ -99,6 +99,8 @@ get /\/photo\/(.*)\.jpg/ do
     end
   end
 
+  content_type :jpeg
+
   open(photo_url, "r") do |file|
     file.read
   end
@@ -196,7 +198,7 @@ post "/:album_id/photo/new" do
     contents << hash
     title = nil unless title == nil
   end
-  
+
   json = contents.to_json
   content_type :json
 
