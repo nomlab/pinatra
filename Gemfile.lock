@@ -49,7 +49,7 @@ GEM
     rack (2.0.6)
     rack-protection (2.0.5)
       rack
-    rake (10.5.0)
+    rake (12.3.3)
     representable (2.3.0)
       uber (~> 0.0.7)
     retriable (2.1.0)
@@ -90,7 +90,7 @@ DEPENDENCIES
   google-api-client (= 0.9.pre4)
   googleauth
   launchy
-  rake (~> 10.0)
+  rake (~> 12.3)
   rspec
   sinatra
   thor
