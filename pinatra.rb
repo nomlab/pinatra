@@ -3,9 +3,9 @@ require 'sinatra'
 require './googlephoto_client'
 require 'json'
 require 'digest/sha1'
-# Add
 require 'open-uri'
 require 'yaml'
+require 'mime-types'
 
 # FIXME: refactor client.api interface
 def find_album_by_id(client, album_id)
@@ -25,6 +25,16 @@ def extension_to_content_type(key)
   }
   return type[key]
 end
+
+def decision_content_type(mime_type)
+  ctype = MIME::Types[mime_type].first.extensions.first
+  if ctype == "jpeg" or ctype == "jpe"
+    ctype = "jpg"
+  end
+
+  return ctype
+end
+
 
 ################################################################
 ## Pinatra Photo cache
@@ -78,28 +88,28 @@ end
 
 # 注意: sinatraが用いている正規表現ライブラリでは，終端表現が使えない
 # https://github.com/sinatra/mustermann
-get /\/photo\/(.*)\.jpg/ do
+get /\/photo\/(.*)\.(.*)/ do
   CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
   config = YAML.load_file(CONFIG_PATH)
-
-  photo_url = "photo/#{params['captures'].first}.jpg"
+  ctype = "#{params['captures'][1]}"
+  photo_url = "photo/#{params['captures'].first}.#{ctype}"
   if !File.exist?(photo_url)
     photo = google_photo_client.get_photo(params['captures'].first)
     if photo
       photo = photo.to_h
+      ctype = decision_content_type(photo["mimeType"])
+      photo_url = "photo/#{params['captures'].first}.#{ctype}"
     else
       # Sinatra::NotFound例外が発生するとnot_found doにとぶ
       raise Sinatra::NotFound
     end
-
     open("#{photo['baseUrl']}=w1024-h1024") do |file|
       open(photo_url, "w+b") do |output|
         output.write(file.read)
       end
     end
   end
-
-  content_type :jpeg
+  content_type :"#{ctype}"
 
   open(photo_url, "r") do |file|
     file.read
@@ -135,8 +145,9 @@ get "/photos" do
   # end
 
   photos.each do |p|
+    ctype = decision_content_type(p["mimeType"])
     photo = {
-      src: "#{config["host_url"]}/photo/#{p["id"]}.jpg",
+      src: "#{config["host_url"]}/photo/#{p["id"]}.#{ctype}",
       title: p["filename"],
       id: p["id"],
       thumb: {
