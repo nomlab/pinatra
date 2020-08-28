@@ -116,17 +116,23 @@ get /\/photo\/(.*)\.(.*)/ do
   end
 end
 
+# GET /photos?pageToken=...&pageSize=100
+# max page_size is 100
 get "/photos" do
   CONFIG_PATH = "#{ENV['HOME']}/.config/pinatra/config.yml"
   config = YAML.load_file(CONFIG_PATH)
 
   photos = []
-  contents = []
+  contents = {}
+  contents['mediaItems'] = []
+  contents['nextPageToken'] = nil
   callback = params['callback']
   album_id_list = config["album_id"]
 
   album_id_list.each do |album_id|
-    photos = Array(photos) << google_photo_client.get_albumphotos(album_id).to_h["mediaItems"]
+    photos_raw = google_photo_client.get_albumphotos(album_id, params['pageSize'] || 100, params['pageToken']).to_h
+    contents['nextPageToken'] = photos_raw["nextPageToken"]
+    photos = Array(photos) << photos_raw["mediaItems"]
   end
   photos.flatten!
   photos.compact!
@@ -156,7 +162,7 @@ get "/photos" do
         height: 128
       }
     }
-    contents << photo
+    contents['mediaItems'] << photo
   end
   json = contents.to_json
 
