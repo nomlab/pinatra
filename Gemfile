@@ -7,6 +7,6 @@ gem 'sinatra'
 gem "google-api-client", "0.9.pre4"
 gem "googleauth"
 gem "launchy"
-gem "rake", "~> 10.0"
+gem "rake", "~> 12.3"
 gem "rspec"
 gem "thor"
