@@ -72,16 +72,26 @@ module Pinatra
 
     # album_id で指定されたアルバムから最新の page_size 枚を取得
     def get_albumphotos(album_id, page_size = 100, page_token = nil)
-      url = "https://photoslibrary.googleapis.com/v1/mediaItems:search"
+      if album_id == "all"
+        url = "https://photoslibrary.googleapis.com/v1/mediaItems"
+        request = { "pageSize": page_size}
+      else
+        url = "https://photoslibrary.googleapis.com/v1/mediaItems:search"
+        request = { "albumId": album_id, "pageSize": page_size}
+      end
       uri = URI.parse(url)
       header =  { "Authorization" => "Bearer #{@credentials.access_token}", "Content-Type" => "application/json" }
-      request = { "albumId": album_id, "pageSize": page_size}
       request["pageToken"] = page_token if page_token
 
       begin
         res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
           http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-          http.post(uri.request_uri, request.to_json, header)
+          if album_id == "all"
+            uri.query = URI.encode_www_form(request)
+            http.get(uri, header)
+          else
+            http.post(uri.request_uri, request.to_json, header)
+          end
         end
         if res.class == Net::HTTPOK
           return JSON.parse(res.body)
